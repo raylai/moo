@@ -1,5 +1,5 @@
 %{
-/*	$Id: moo.y,v 1.11 2006/06/16 18:16:07 ray Exp $	*/
+/*	$Id: moo.y,v 1.16 2007/01/11 19:03:07 ray Exp $	*/
 
 /*
  * Written by Raymond Lai <ray@cyth.net>.
@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <err.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +23,7 @@
 
 extern FILE *yyin;
 static int bflag;
+static int nb_operands;
 static int print_hex;
 static int print_dec;
 static int print_oct;
@@ -34,7 +36,7 @@ static int used_hex;
 static int used_oct;
 
 static void		divbyzero(void);
-static void		printnum(int);
+static void		printnum(int64_t);
 __dead static void	usage(void);
 void			yyerror(char *);
 int			yylex(void);
@@ -48,51 +50,51 @@ int			yyparse(void);
 %token INTEGER EQ NEQ LS RS
 %left LOR
 %left LAND
-%left '|'
-%left '^'
-%left '&'
+%left BOR
+%left XOR
+%left BAND
 %left EQ NEQ
 %left LT GT LE GE
 %left LS RS
-%left '+' '-'
-%left '*' '/' '%'
-%right '!' '~'
+%left PLUS MINUS
+%left TIMES DIV MOD
+%right NOT INVERSE
 %type <number>	INTEGER
 %type <number>	expr
 
 %%
 program:
-	program expr '\n'	{
+	program expr NL		{
 					if (used_hex || used_dec ||
 					    used_oct || used_bin)
 						printnum($2);
-					used_hex = used_dec = used_oct =
-					    used_bin = 0;
+					nb_operands = used_hex = used_dec =
+					    used_oct = used_bin = 0;
 				}
 	|
-	| error '\n'		{ yyerrok; }
+	| error NL		{ yyerrok; }
 	;
 
 expr:
 	INTEGER			{ $$ = $1; }
-	| expr '+' expr		{ $$ = $1 + $3; }
-	| expr '-' expr		{ $$ = $1 - $3; }
-	| expr '*' expr		{ $$ = $1 * $3; }
-	| expr '/' expr		{
+	| expr PLUS expr	{ $$ = $1 + $3; }
+	| expr MINUS expr	{ $$ = $1 - $3; }
+	| expr TIMES expr	{ $$ = $1 * $3; }
+	| expr DIV expr		{
 					if ($3 == 0)
 						divbyzero();
 					else
 						$$ = $1 / $3;
 				}
-	| expr '%' expr		{
+	| expr MOD expr		{
 					if ($3 == 0)
 						divbyzero();
 					else
 						$$ = $1 % $3;
 				}
-	| expr '&' expr		{ $$ = $1 & $3; }
-	| expr '^' expr		{ $$ = $1 ^ $3; }
-	| expr '|' expr		{ $$ = $1 | $3; }
+	| expr BAND expr	{ $$ = $1 & $3; }
+	| expr XOR expr		{ $$ = $1 ^ $3; }
+	| expr BOR expr		{ $$ = $1 | $3; }
 	| expr LAND expr	{ $$ = $1 && $3; }
 	| expr LOR expr		{ $$ = $1 || $3; }
 	| expr EQ expr		{ $$ = $1 == $3; }
@@ -103,10 +105,10 @@ expr:
 	| expr GE expr		{ $$ = $1 >= $3; }
 	| expr LS expr		{ $$ = $1 << $3; }
 	| expr RS expr		{ $$ = $1 >> $3; }
-	| '~' expr		{ $$ = ~$2; }
-	| '!' expr		{ $$ = !$2; }
-	| '-' expr %prec '*'	{ $$ = -$2; }
-	| '(' expr ')'		{ $$ = $2; }
+	| INVERSE expr		{ $$ = ~$2; }
+	| NOT expr		{ $$ = !$2; }
+	| MINUS expr %prec TIMES{ $$ = -$2; }
+	| LPAREN expr RPAREN	{ $$ = $2; }
 	;
 %%
 
@@ -128,7 +130,7 @@ yyerror(char *s)
  * Print numbers in bases that were input or in bases that were specified.
  */
 static void
-printnum(int num)
+printnum(int64_t num)
 {
 	int printed;
 
@@ -141,37 +143,42 @@ printnum(int num)
 	printed = 0;
 	/* If no bases were specified, print the ones that were input. */
 	if (!bflag) {
-		/* Reset print flags. */
-		print_hex = print_dec = print_oct = print_bin = 0;
-		if (used_hex)
-			print_hex = 1;
-		if (used_dec)
-			print_dec = 1;
-		if (used_oct)
-			print_oct = 1;
-		if (used_bin)
-			print_bin = 1;
-		/* Reset used flags. */
-		used_hex = used_dec = used_oct = used_bin = 0;
+		/* If only one term was entered, print it in all bases */
+		if (nb_operands == 1)
+			print_hex = print_dec = print_oct = print_bin = 1;
+		else {
+			/* Reset print flags. */
+			print_hex = print_dec = print_oct = print_bin = 0;
+			if (used_hex)
+				print_hex = 1;
+			if (used_dec)
+				print_dec = 1;
+			if (used_oct)
+				print_oct = 1;
+			if (used_bin)
+				print_bin = 1;
+			/* Reset used flags. */
+			used_hex = used_dec = used_oct = used_bin = 0;
+		}
 	}
 
 	if (print_hex) {
 		printspace();
-		printf("0x%x", num);
+		printf("0x%" PRIx64, num);
 	}
 	if (print_dec) {
 		if (print_unsigned) {
 			printspace();
-			printf("%uu", num);
+			printf("%" PRIu64, num);
 		}
 		if (print_signed) {
 			printspace();
-			printf("%d", num);
+			printf("%" PRId64, num);
 		}
 	}
 	if (print_oct) {
 		printspace();
-		printf("0%o", num);
+		printf("0%" PRIo64, num);
 	}
 	if (print_bin) {
 		int bit, printed_bit;
@@ -181,7 +188,7 @@ printnum(int num)
 		printspace();
 		printf("0b");
 		for (bit = sizeof(num) * 8; bit > 0; --bit)
-			if (num & (1 << (bit - 1))) {
+			if (num & (1LL << (bit - 1))) {
 				printf("1");
 				++printed_bit;
 			/* Print leading zeroes if any bits were printed. */
@@ -215,6 +222,7 @@ getbin(const char *nptr)
 	int64_t num;
 	const char *p;
 
+	++nb_operands;
 	used_bin = 1;
 
 	if (strncmp("0b", nptr, 2) != 0)
@@ -257,6 +265,7 @@ getnum(const char *nptr)
 		errx(1, "out of range: %s", nptr);
 	num = lval;
 
+	++nb_operands;
 	if (strncmp(nptr, "0x", 2) == 0)
 		used_hex = 1;
 	else if (nptr[0] == '0' && nptr[1] != '\0')
@@ -306,7 +315,6 @@ main(int argc, char *argv[])
 				break;
 			default:
 				errx(1, "invalid base: %s", optarg);
-				/* NOTREACHED */
 			}
 			break;
 		case 's':
@@ -317,7 +325,6 @@ main(int argc, char *argv[])
 			break;
 		default:
 			usage();
-			/* NOTREACHED */
 		}
 DONEPARSING:
 	argc -= optind;

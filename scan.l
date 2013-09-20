@@ -1,5 +1,5 @@
 %{
-/*	$Id: scan.l,v 1.4 2006/06/16 07:32:27 ray Exp $	*/
+/*	$Id: scan.l,v 1.5 2006/11/08 10:05:17 ray Exp $	*/
 
 /*
  * Written by Raymond Lai <ray@cyth.net>.
@@ -35,21 +35,30 @@
 	return (INTEGER);
 }
 
-"<"	return (LT);
-">"	return (GT);
 "<="	return (LE);
 ">="	return (GE);
+"<"	return (LT);
+">"	return (GT);
 "=="	return (EQ);
 "!="	return (NEQ);
 "<<"	return (LS);
 ">>"	return (RS);
 "||"	return (LOR);
 "&&"	return (LAND);
-
-[-+*/%()^|!~&\n]	return (*yytext);
+"+"	return (PLUS);
+"-"	return (MINUS);
+"*"	return (TIMES);
+"/"	return (DIV);
+"%"	return (MOD);
+"("	return (LPAREN);
+")"	return (RPAREN);
+"^"	return (XOR);
+"|"	return (BOR);
+"&"	return (BAND);
+"!"	return (NOT);
+"~"	return (INVERSE);
+"\n"	return (NL);
 
 [ \t]	; /* skip whitespace */
-
-.	; /* skip everything else */
 
 %%

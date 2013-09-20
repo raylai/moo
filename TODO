@@ -1,2 +1,8 @@
-If a number is entered with no calculation, just print out the
-number in all bases.
+Add support for different integer widths using -w flag,
+i.e. moo -w 32 to use 32 bit integers.  It would be nice to support
+multiple -w flags as well.
+
+Add support for casting, i.e. -c32 would show what happens when you
+cast to int32_t.  Not sure how to handle casting signed vs unsigned.
+
+Add regression tests for single number input, all base output.
