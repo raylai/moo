@@ -1,0 +1,83 @@
+.\"	$Id: moo.1,v 1.6 2006/03/04 10:02:34 ray Exp $
+.\"
+.\" Written by Raymond Lai <ray@cyth.net>.
+.\" Public domain.
+.\"
+.Dd March 2, 2006
+.Dt MOO 1
+.Os
+.Sh NAME
+.Nm moo
+.Nd Marco's Object Oriented calculator
+.Sh SYNOPSIS
+.Nm
+.Op Fl su
+.Op Fl b Ar base
+.Op Ar expr
+.Op Ar ...
+.Sh DESCRIPTION
+A simple calculator that accepts C-like syntax as input.
+Calculations are done on
+.Ar expr ,
+if given.
+Otherwise, the standard input is used.
+.Pp
+Numbers can be entered in hexadecimal (0xbeef),
+decimal (1984),
+octal (007),
+and binary (0b1001).
+All numerical operators (+, -, *, /, %),
+bit operators (|, ^, &, ~, <<, >>),
+and logical operators (==, !=, <, >, <=, >=, !, &&, ||)
+are supported.
+.Pp
+Output will be in the same bases as the input,
+unless a different base was specified
+(see
+.Fl b
+flag below).
+.Pp
+The options are:
+.Bl -tag -width Ds
+.It Fl b Ar base
+Output numbers in
+.Ar base
+format.
+.Ar base
+can be 2, 8, 10, 16, or `all'.
+Multiple bases may be specified by giving the
+.Fl b
+flag multiple times.
+.It Fl s
+Output base 10 numbers as signed.
+.It Fl u
+Output base 10 numbers as unsigned.
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width Ds
+.It Ev TMPDIR
+Specifies a directory for temporary files to be created.
+The default is
+.Pa /tmp .
+.El
+.Sh SEE ALSO
+.Xr bc 1 ,
+.Xr dc 1 ,
+.Xr expr 1
+.Sh AUTHORS
+.Nm
+was written for the public domain by
+.An Ray Lai Aq ray@cyth.net
+after much whining by Marco Peereboom.
+.Sh CAVEATS
+Integer overflows are not checked.
+Marco says,
+``I don't think you should call the integer overflows a bug but a feature.
+You can use it to test signed unsigned issues.''
+.Sh BUGS
+Calculations are limited to the size of an integer.
+.Pp
+Like
+.Xr bc 1 ,
+.Nm
+parses ``3--2'' without error.
