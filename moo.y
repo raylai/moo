@@ -1,5 +1,5 @@
 %{
-/*	$Id: moo.y,v 1.7 2006/03/04 09:59:48 ray Exp $	*/
+/*	$Id: moo.y,v 1.9 2006/03/05 20:16:27 ray Exp $	*/
 
 /*
  * Written by Raymond Lai <ray@cyth.net>.
@@ -40,6 +40,8 @@ int			yyparse(void);
 %}
 
 %token INTEGER EQ NEQ LS RS
+%left LOR
+%left LAND
 %left '|'
 %left '^'
 %left '&'
@@ -49,8 +51,6 @@ int			yyparse(void);
 %left '+' '-'
 %left '*' '/' '%'
 %right '!' '~'
-%left LAND
-%left LOR
 
 %%
 program:
@@ -129,7 +129,7 @@ printnum(int num)
 
 	if (print_hex) {
 		printspace();
-		printf("%#x", num);
+		printf("0x%x", num);
 	}
 	if (print_dec) {
 		if (print_unsigned) {
@@ -143,7 +143,7 @@ printnum(int num)
 	}
 	if (print_oct) {
 		printspace();
-		printf("%#o", num);
+		printf("0%o", num);
 	}
 	if (print_bin) {
 		int bit, printed_bit;
@@ -163,6 +163,12 @@ printnum(int num)
 					++printed_bit;
 				}
 			}
+		/*
+		 * If no bits were printed out (num == 0) then print a 0
+		 * so we don't just print ``0b''.
+		 */
+		if (!printed_bit)
+			printf("0");
 	}
 
 	printf("\n");
