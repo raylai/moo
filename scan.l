@@ -1,39 +1,37 @@
 %{
-/*	$Id: scan.l,v 1.3 2006/03/04 07:12:52 ray Exp $	*/
+/*	$Id: scan.l,v 1.4 2006/06/16 07:32:27 ray Exp $	*/
 
 /*
  * Written by Raymond Lai <ray@cyth.net>.
  * Public domain.
  */
 
+#include <sys/param.h>
+#include <sys/stdint.h>
+
 #include <stdlib.h>
 
 #include "extern.h"
 #include "y.tab.h"
 
-/*
- * XXX - Some code on the internet suggested I put this:
- * 	extern YYSTYPE yylval;
- * but that doesn't work.  Otto's code doesn't need this, why does mine?
- */
-extern int yylval;
-
 %}
+
+%option yylineno noyywrap nounput
 
 %%
 
 [0-9]+ {
-	yylval = getnum(yytext);
+	yylval.number = getnum(yytext);
 	return (INTEGER);
 }
 
 0x[0-9a-fA-F]+ {
-	yylval = getnum(yytext);
+	yylval.number = getnum(yytext);
 	return (INTEGER);
 }
 
 0b[01]+ {
-	yylval = getbin(yytext);
+	yylval.number = getbin(yytext);
 	return (INTEGER);
 }
 
@@ -55,7 +53,3 @@ extern int yylval;
 .	; /* skip everything else */
 
 %%
-
-int yywrap(void) {
-	return (1);
-}

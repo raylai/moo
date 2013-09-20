@@ -1,5 +1,5 @@
 %{
-/*	$Id: moo.y,v 1.9 2006/03/05 20:16:27 ray Exp $	*/
+/*	$Id: moo.y,v 1.11 2006/06/16 18:16:07 ray Exp $	*/
 
 /*
  * Written by Raymond Lai <ray@cyth.net>.
@@ -7,6 +7,7 @@
  */
 
 #include <sys/cdefs.h>
+#include <sys/stdint.h>
 
 #include <ctype.h>
 #include <err.h>
@@ -32,12 +33,17 @@ static int used_dec;
 static int used_hex;
 static int used_oct;
 
+static void		divbyzero(void);
 static void		printnum(int);
 __dead static void	usage(void);
 void			yyerror(char *);
 int			yylex(void);
 int			yyparse(void);
 %}
+
+%union {
+	int64_t	 number;
+}
 
 %token INTEGER EQ NEQ LS RS
 %left LOR
@@ -51,11 +57,15 @@ int			yyparse(void);
 %left '+' '-'
 %left '*' '/' '%'
 %right '!' '~'
+%type <number>	INTEGER
+%type <number>	expr
 
 %%
 program:
 	program expr '\n'	{
-					printnum($2);
+					if (used_hex || used_dec ||
+					    used_oct || used_bin)
+						printnum($2);
 					used_hex = used_dec = used_oct =
 					    used_bin = 0;
 				}
@@ -68,8 +78,18 @@ expr:
 	| expr '+' expr		{ $$ = $1 + $3; }
 	| expr '-' expr		{ $$ = $1 - $3; }
 	| expr '*' expr		{ $$ = $1 * $3; }
-	| expr '/' expr		{ $$ = $1 / $3; }
-	| expr '%' expr		{ $$ = $1 % $3; }
+	| expr '/' expr		{
+					if ($3 == 0)
+						divbyzero();
+					else
+						$$ = $1 / $3;
+				}
+	| expr '%' expr		{
+					if ($3 == 0)
+						divbyzero();
+					else
+						$$ = $1 % $3;
+				}
 	| expr '&' expr		{ $$ = $1 & $3; }
 	| expr '^' expr		{ $$ = $1 ^ $3; }
 	| expr '|' expr		{ $$ = $1 | $3; }
@@ -89,6 +109,14 @@ expr:
 	| '(' expr ')'		{ $$ = $2; }
 	;
 %%
+
+void
+divbyzero(void)
+{
+	warnx("divide by zero");
+	/* Don't print anything. */
+	used_hex = used_dec = used_oct = used_bin = 0;
+}
 
 void
 yyerror(char *s)
@@ -181,10 +209,10 @@ TOOLONG:
 /*
  * Read binary number string and convert to int.
  */
-int
+int64_t
 getbin(const char *nptr)
 {
-	int num;
+	int64_t num;
 	const char *p;
 
 	used_bin = 1;
@@ -213,19 +241,19 @@ getbin(const char *nptr)
 /*
  * Accept hex, decimal, and octal integers.
  */
-int
+int64_t
 getnum(const char *nptr)
 {
-	int num;
+	int64_t num;
 	char *ep;
-	long lval;
+	int64_t lval;
 
 	errno = 0;
-	lval = strtol(nptr, &ep, 0);
+	lval = strtoll(nptr, &ep, 0);
 	if (*nptr == '\0' || *ep != '\0')
 		errx(1, "invalid number: %s", nptr);
-	if ((errno == ERANGE && (lval == LONG_MAX || lval == LONG_MIN)) ||
-	    (lval > INT_MAX || lval < INT_MIN))
+	if ((errno == ERANGE && (lval == LLONG_MAX || lval == LLONG_MIN)) ||
+	    (lval > INT64_MAX || lval < INT64_MIN))
 		errx(1, "out of range: %s", nptr);
 	num = lval;
 
