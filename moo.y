@@ -21,13 +21,13 @@
 
 extern FILE *yyin;
 static int bflag;
-static int nb_operands;
 static int print_hex;
 static int print_dec;
 static int print_oct;
 static int print_bin;
 static int print_signed;
 static int print_unsigned;
+static uint tokens;
 static int used_bin;
 static int used_dec;
 static int used_hex;
@@ -66,7 +66,7 @@ program:
 					if (used_hex || used_dec ||
 					    used_oct || used_bin)
 						printnum($2);
-					nb_operands = used_hex = used_dec =
+					tokens = used_hex = used_dec =
 					    used_oct = used_bin = 0;
 				}
 	|
@@ -74,39 +74,43 @@ program:
 	;
 
 expr:
-	INTEGER			{ $$ = $1; }
-	| expr PLUS expr	{ $$ = $1 + $3; }
-	| expr MINUS expr	{ $$ = $1 - $3; }
-	| expr TIMES expr	{ $$ = $1 * $3; }
+	INTEGER			{ $$ = $1; tokens++; }
+	| expr PLUS expr	{ $$ = $1 + $3; tokens++; }
+	| expr MINUS expr	{ $$ = $1 - $3; tokens++; }
+	| expr TIMES expr	{ $$ = $1 * $3; tokens++; }
 	| expr DIV expr		{
 					if ($3 == 0)
 						divbyzero();
-					else
+					else {
 						$$ = $1 / $3;
+						tokens++;
+					}
 				}
 	| expr MOD expr		{
 					if ($3 == 0)
 						divbyzero();
-					else
+					else {
 						$$ = $1 % $3;
+						tokens++;
+					}
 				}
-	| expr BAND expr	{ $$ = $1 & $3; }
-	| expr XOR expr		{ $$ = $1 ^ $3; }
-	| expr BOR expr		{ $$ = $1 | $3; }
-	| expr LAND expr	{ $$ = $1 && $3; }
-	| expr LOR expr		{ $$ = $1 || $3; }
-	| expr EQ expr		{ $$ = $1 == $3; }
-	| expr NEQ expr		{ $$ = $1 != $3; }
-	| expr LT expr		{ $$ = $1 < $3; }
-	| expr GT expr		{ $$ = $1 > $3; }
-	| expr LE expr		{ $$ = $1 <= $3; }
-	| expr GE expr		{ $$ = $1 >= $3; }
-	| expr LS expr		{ $$ = $1 << $3; }
-	| expr RS expr		{ $$ = $1 >> $3; }
-	| INVERSE expr		{ $$ = ~$2; }
-	| NOT expr		{ $$ = !$2; }
-	| MINUS expr %prec TIMES{ $$ = -$2; }
-	| LPAREN expr RPAREN	{ $$ = $2; }
+	| expr BAND expr	{ $$ = $1 & $3; tokens++; }
+	| expr XOR expr		{ $$ = $1 ^ $3; tokens++; }
+	| expr BOR expr		{ $$ = $1 | $3; tokens++; }
+	| expr LAND expr	{ $$ = $1 && $3; tokens++; }
+	| expr LOR expr		{ $$ = $1 || $3; tokens++; }
+	| expr EQ expr		{ $$ = $1 == $3; tokens++; }
+	| expr NEQ expr		{ $$ = $1 != $3; tokens++; }
+	| expr LT expr		{ $$ = $1 < $3; tokens++; }
+	| expr GT expr		{ $$ = $1 > $3; tokens++; }
+	| expr LE expr		{ $$ = $1 <= $3; tokens++; }
+	| expr GE expr		{ $$ = $1 >= $3; tokens++; }
+	| expr LS expr		{ $$ = $1 << $3; tokens++; }
+	| expr RS expr		{ $$ = $1 >> $3; tokens++; }
+	| INVERSE expr		{ $$ = ~$2; tokens++; }
+	| NOT expr		{ $$ = !$2; tokens++; }
+	| MINUS expr %prec TIMES{ $$ = -$2; tokens++; }
+	| LPAREN expr RPAREN	{ $$ = $2; tokens += 2; }
 	;
 %%
 
@@ -142,7 +146,7 @@ printnum(int64_t num)
 	/* If no bases were specified, print the ones that were input. */
 	if (!bflag) {
 		/* If only one term was entered, print it in all bases */
-		if (nb_operands == 1)
+		if (tokens == 1)
 			print_hex = print_dec = print_oct = print_bin = 1;
 		else {
 			/* Reset print flags. */
@@ -220,7 +224,6 @@ getbin(const char *nptr)
 	int64_t num;
 	const char *p;
 
-	++nb_operands;
 	used_bin = 1;
 
 	if (strncmp("0b", nptr, 2) != 0)
@@ -263,7 +266,6 @@ getnum(const char *nptr)
 		errx(1, "out of range: %s", nptr);
 	num = lval;
 
-	++nb_operands;
 	if (strncmp(nptr, "0x", 2) == 0)
 		used_hex = 1;
 	else if (nptr[0] == '0' && nptr[1] != '\0')
