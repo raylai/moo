@@ -47,7 +47,7 @@ int			yyparse(void);
 	int64_t	 number;
 }
 
-%token INTEGER EQ NEQ LS RS
+%token INTEGER EQ NEQ NL LS RS LPAREN RPAREN
 %left LOR
 %left LAND
 %left BOR
