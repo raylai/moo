@@ -1,7 +1,7 @@
 .\" Written by Raymond Lai <ray@cyth.net>.
 .\" Public domain.
 .\"
-.Dd March 2, 2006
+.Dd June 4, 2016
 .Dt MOO 1
 .Os
 .Sh NAME
@@ -9,7 +9,7 @@
 .Nd Marco's Object Oriented calculator
 .Sh SYNOPSIS
 .Nm
-.Op Fl su
+.Op Fl lsu
 .Op Fl b Ar base
 .Op Ar expr
 .Op Ar ...
@@ -48,6 +48,8 @@ can be 2, 8, 10, 16, or `all'.
 Multiple bases may be specified by giving the
 .Fl b
 flag multiple times.
+.It Fl l
+Output bit labels for binary results.
 .It Fl s
 Output base 10 numbers as signed.
 .It Fl u

@@ -23,6 +23,7 @@ static int print_hex;
 static int print_dec;
 static int print_oct;
 static int print_bin;
+static int print_bitlabels;
 static int print_signed;
 static int print_unsigned;
 static uint tokens;
@@ -183,6 +184,43 @@ printnum(int64_t num)
 	if (print_bin) {
 		int bit, printed_bit;
 
+		/* print out bit positions if asked */
+		if (print_bitlabels) {
+			int n, i, base = 10, digits = 0;
+			printed_bit = 0;
+
+			printspace();
+			printf("  ");
+			for (bit = (sizeof(num) * 8) - 1; bit >= 0; --bit) {
+				if ((num & (1LL << bit)) &&
+				    (printed_bit == 0)) {
+					printed_bit = bit;
+					break;
+				}
+			}
+
+			/* figure out how many rows we need to display */
+
+			n = printed_bit;
+			
+			while (n > 0) {
+				digits++;
+				n = n / base;
+			}
+	
+			for (i = digits - 1; i > 0; i--) {
+				for (bit = (sizeof(num) * 8) - 1; bit >= 0;
+				    --bit) {
+					if (bit <= printed_bit)
+						printf("%d", bit / (10 * i));
+				}
+				printf("\n  ");
+			}
+			for (bit = (sizeof(num) * 8) - 1; bit >= 0; --bit)
+				if (bit <= printed_bit)
+					printf("%d", bit % 10);
+		}
+
 		printed_bit = 0;
 
 		printspace();
@@ -279,7 +317,7 @@ main(int argc, char *argv[])
 {
 	int ch;
 
-	while ((ch = getopt(argc, argv, "0123456789b:suw:")) != -1)
+	while ((ch = getopt(argc, argv, "0123456789b:lsuw:")) != -1)
 		switch (ch) {
 		/*
 		 * If we get a numerical flag it may be a negative
@@ -315,6 +353,8 @@ main(int argc, char *argv[])
 				errx(1, "invalid base: %s", optarg);
 			}
 			break;
+		case 'l':
+			print_bitlabels = 1;
 		case 's':
 			print_signed = 1;
 			break;
@@ -374,7 +414,7 @@ usage(void)
 {
 	extern char *__progname;
 
-	fprintf(stderr, "usage: %s [-su] [-b base] expr\n",
+	fprintf(stderr, "usage: %s [-lsu] [-b base] expr\n",
 	    __progname);
 	exit(1);
 }
