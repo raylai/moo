@@ -374,13 +374,10 @@ DONEPARSING:
 
 	/* If arguments were given calculate arguments instead of stdin. */
 	if (argc > 0) {
+		char sfn[] = "/tmp/moo.XXXXXXXXXX";
 		FILE *sfp;
 		int fd, i;
-		char *sfn;
 
-		if (asprintf(&sfn, "%s/moo.XXXXXXXXXX",
-		    getenv("TMPDIR") ? getenv("TMPDIR") : "/tmp") == -1)
-			err(1, "asprintf");
 		if ((fd = mkstemp(sfn)) == -1 ||
 		    (sfp = fdopen(fd, "w+")) == NULL) {
 			warn("%s", sfn);
@@ -398,7 +395,6 @@ DONEPARSING:
 		/* Parser needs a newline at end. */
 		if (fputs("\n", sfp))
 			err(1, "error writing %s", sfn);
-		free(sfn);
 
 		rewind(sfp);
 		yyin = sfp;
