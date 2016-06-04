@@ -1,6 +1,4 @@
 %{
-/*	$Id: moo.y,v 1.16 2007/01/11 19:03:07 ray Exp $	*/
-
 /*
  * Written by Raymond Lai <ray@cyth.net>.
  * Public domain.

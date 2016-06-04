@@ -1,5 +1,3 @@
-#	$Id: Makefile,v 1.8 2006/03/06 06:40:59 ray Exp $
-
 PROG=		moo
 SRCS=		moo.c scan.c
 CPPFLAGS+=	-I${.CURDIR}
