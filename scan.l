@@ -1,4 +1,6 @@
 %{
+/*	$Id: scan.l,v 1.5 2006/11/08 10:05:17 ray Exp $	*/
+
 /*
  * Written by Raymond Lai <ray@cyth.net>.
  * Public domain.

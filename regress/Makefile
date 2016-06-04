@@ -1,3 +1,5 @@
+#	$Id: Makefile,v 1.4 2007/01/11 19:58:45 ray Exp $
+
 MOO?=			moo
 CLEANFILES+=		moo.out
 REGRESS_TARGETS?=	t1  t2  t3  t4  t5  t6  t7  t8  t9  t10	\
