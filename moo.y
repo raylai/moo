@@ -265,7 +265,7 @@ getbin(const char *nptr)
 	if (strncmp("0b", nptr, 2) != 0)
 		errx(2, "not a binary number: %s", nptr);
 
-	/* XXX - buffer overflow */
+	/* XXX - integer overflow */
 	for (p = nptr + 2, num = 0; *p != '\0'; ++p) {
 		num <<= 1;
 
