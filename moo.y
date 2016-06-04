@@ -134,10 +134,10 @@ printnum(int64_t num)
 {
 	int printed;
 
-/* Print tabs between numbers as necessary. */
+/* Print newlines between numbers as necessary. */
 #define printspace() do {	\
 	if (printed++)		\
-		printf("\t");	\
+		printf("\n");	\
 } while (0)
 
 	printed = 0;
