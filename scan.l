@@ -6,9 +6,7 @@
  * Public domain.
  */
 
-#include <sys/param.h>
-#include <sys/stdint.h>
-
+#include <stdint.h>
 #include <stdlib.h>
 
 #include "extern.h"
