@@ -317,6 +317,9 @@ main(int argc, char *argv[])
 {
 	int ch;
 
+	if (pledge("stdio tmppath", NULL) == -1)
+		err(1, "pledge");
+
 	while ((ch = getopt(argc, argv, "0123456789b:lsuw:")) != -1)
 		switch (ch) {
 		/*
@@ -399,6 +402,9 @@ DONEPARSING:
 		rewind(sfp);
 		yyin = sfp;
 	}
+
+	if (pledge("stdio", NULL) == -1)
+		err(1, "pledge");
 
 	yyparse();
 
