@@ -15,6 +15,11 @@
 #include <string.h>
 #include <unistd.h>
 
+#if __linux__
+#include <getopt.h>
+#define __dead
+#endif
+
 #include "extern.h"
 
 extern FILE *yyin;
@@ -26,7 +31,7 @@ static int print_bin;
 static int print_bitlabels;
 static int print_signed;
 static int print_unsigned;
-static uint tokens;
+static unsigned int tokens;
 static int used_bin;
 static int used_dec;
 static int used_hex;
@@ -317,8 +322,10 @@ main(int argc, char *argv[])
 {
 	int ch;
 
+#if __FreeBSD__
 	if (pledge("stdio tmppath", NULL) == -1)
 		err(1, "pledge");
+#endif
 
 	while ((ch = getopt(argc, argv, "0123456789b:lsuw:")) != -1)
 		switch (ch) {
@@ -403,8 +410,10 @@ DONEPARSING:
 		yyin = sfp;
 	}
 
+#if __FreeBSD__
 	if (pledge("stdio", NULL) == -1)
 		err(1, "pledge");
+#endif
 
 	yyparse();
 
